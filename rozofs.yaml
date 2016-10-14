@@ -1,0 +1,38 @@
+---
+- hosts: storages
+  remote_user: root
+  tasks:
+  - name: upgrade all packages
+    yum: name=* state=latest
+
+  - name: install dependencies
+    yum: state=present name={{ item }}
+    with_items:
+    - git
+    - cmake
+    - make
+    - gcc
+    - rpm-build
+    - libuuid-devel
+    - libconfig-devel
+    - libattr-devel
+    - readline-devel
+    - swig
+    - python-devel
+    - fuse-devel
+    - numactl-devel
+
+  - name: checkout rozofs
+    git: repo=https://github.com/rozofs/rozofs.git dest=/tmp/rozofs depth=1
+
+  - name: create build directory
+    file: path=/tmp/rozofs/build state=directory
+
+  - name: cmake
+    command: cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ../ chdir=/tmp/rozofs/build
+
+  - name: compile rozofs
+    command: make -j8 chdir=/tmp/rozofs/build
+
+  - name: install rozofs
+    command: make install chdir=/tmp/rozofs/build
